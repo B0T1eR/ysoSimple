@@ -78,6 +78,13 @@
 	</repositories>
 
     <dependencies>
+        <!--Fake Mysql Need-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.20</version>
+            <scope>provided</scope>
+        </dependency>
         <!--JSF-->
         <dependency>
             <groupId>com.sun.faces</groupId>

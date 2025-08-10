@@ -10,9 +10,9 @@ import cn.butler.template.config.SSTIAttackConfig;
 import cn.butler.thirdparty.config.ThirdPartyConfig;
 import cn.butler.xstream.config.XStreamConfig;
 import org.apache.commons.cli.*;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.LogManager;
 
 @SuppressWarnings("rawtypes")
 public class GeneratePayload {
@@ -26,6 +26,8 @@ public class GeneratePayload {
     public static ThirdPartyConfig thirdPartyConfig = new ThirdPartyConfig();
 
 	public static void main(final String[] args) throws ParseException {
+        //因为FakeMySQLPcapFile生成数据流时会携带输出日志,所以在这里关闭JUL日志就好
+        LogManager.getLogManager().reset();
         Map<String, Options> allOptions = new HashMap<>();
 
         //设定配置参数
@@ -47,6 +49,7 @@ public class GeneratePayload {
         ysoOptions.addOption("sp", "shiro-encrypt-pattern", true, "Shiro Encrypt AES CBC/GCM Pattern");
         ysoOptions.addOption("swp", "shiro-base64WafBypass", true, "Shiro Base64 Obfuscation To Bypass WAF");
         ysoOptions.addOption("jsf","jsf-key",true,"JSF Faces AES Key");
+        ysoOptions.addOption("mp","mysql-pcap",true,"Mysql Evil Pcap Generate");
         ysoOptions.addOption("en", "encode", true, "Base64,Hex encode");
         ysoOptions.addOption("wtf","writeToFile",true,"Save Serialized Yso Payload to File");
         allOptions.put("YsoAttack", ysoOptions);

