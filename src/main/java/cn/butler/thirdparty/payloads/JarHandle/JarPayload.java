@@ -7,12 +7,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 public class JarPayload {
     public static byte[] create(String className, byte[] byteCode) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        try (JarOutputStream jos = new JarOutputStream(baos)) {
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().putValue("Manifest-Version", "1.0");
+
+        try (JarOutputStream jos = new JarOutputStream(baos,manifest)) {
             // 写入恶意 class 文件
             JarEntry entry = new JarEntry(className.replace(".", "/") + ".class");
             jos.putNextEntry(entry);
