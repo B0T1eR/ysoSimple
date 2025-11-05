@@ -19,6 +19,6 @@ public class C3P01 implements ObjectPayload<Object> {
     }
 
     public static void main ( String[] args ) throws Exception {
-        PayloadRunner.run(C3P01_c3p0.class, args);
+        PayloadRunner.run(C3P01.class, args);
     }
 }
