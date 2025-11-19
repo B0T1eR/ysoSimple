@@ -8,6 +8,12 @@
 
 下面会介绍常见的利用链以及工具使用方式，后面遇到会慢慢补充
 
+###  注意事项
+
+工具不是万能的，工具写的再详细也不一定在复杂的实际环境中一蹴而就。ysoSimple工具只能解决大多数的情况。有些关于Java中利用链和类的细节工具还是没集成进去的。
+
+- BadAttributeValueExpException仅能使用在jdk8-14。再YsoAttack模块中Fastjson1，Fastjson2，Jackson利用链使用的toString头还是BadAttributeValueExpException，实战中遇到jdk较低或者jdk较高版本打这些利用链时候需要注意。
+
 ### 额外的参数
 
 YsoAttack模块设定的额外参数：
@@ -672,7 +678,7 @@ jackson-2.14.2 com.fasterxml.jackson.databind.node.POJONode BaseJsonNode 继承S
 4. org.springframework.aop.framework.DefaultAdvisorChainFactory 版本不同suid也会不同,目前测出来有俩种suid
 5. Jackson，Fastjson的触发头用XString来触发toString方法来解决suid问题
 6. 被舍弃的触发toString头：
-   - BadAttributeValueExpException在jdk高版本无法触发toSting
+   - BadAttributeValueExpException仅能使用在jdk8-14，在更高的jdk版本无法触发toSting
    - EventListenerList在不同jdk版本的编译下suid不同，所以jdk8生成的suid不能在jdk17使用
    - UIDefaults$TextAndMnemonicHashMap在不同jdk版本的编译下suid不同(未测试)，所以jdk8生成的suid不能在jdk17使用
 
