@@ -264,7 +264,7 @@ public final class JDKUtil {
         c.setAccessible(true);
         Object map = c.newInstance(Collections.EMPTY_MAP);
         setFieldValue(map, "m", m);
-        return map;
+        return (Map) map;
     }
 
     /**

@@ -163,6 +163,8 @@ public class YsoConfig extends Config {
                 String encodeType = cmdLine.getOptionValue("encode");
                 if(encodeType.equals("Base64")){
                     encodeResult = Base64.encodeToString(serialize);
+                } else if (encodeType.equals("Base64URL")) {
+                    encodeResult = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(serialize);
                 } else if (encodeType.equals("Hex")) {
                     encodeResult = Hex.encodeHexString(serialize).toUpperCase();
                 }

