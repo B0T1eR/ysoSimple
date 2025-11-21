@@ -203,53 +203,24 @@ YsoSimple工具中`TemplatesImpl:`​命令生成的字节码类需要继承Abst
 
 **中间件**
 
-```java
-Tomcat
-Tomcat6
-Weblogic
-WebSphere
-jetty12
-jetty
-Glassfish
-resin
-undertow
-Jboss
-Wildfly
-netty
-jindie
-tongweb
-bes
+- Tomcat 9 及以下默认使用 `javax.servlet.*` API。打内存马选择正常 Filter 和 Listener。
+- Tomcat 10+ 切换到 `jakarta.servlet.*` API。打内存马选择 JakartaFilter 和 JakartaListener。
+- 使用Tomcat模式在Tomcat6和Tomcat10应用场景下都会有DNS响应，要更精细化区分选择Tomcat版本来探测。
 
+```java
+Tomcat|Tomcat6|Tomcat10|Weblogic|WebSphere|jetty12|jetty|Glassfish|resin|undertow|Jboss|Wildfly|netty|jindie|tongweb|bes
 ```
 
 **利用链**
 
 ```java
-CommonsCollections13567
-CommonsCollections24
-CommonsBeanutils2
-C3P0
-AspectJWeaver
-bsh
-Groovy
-Becl
-DefiningClassLoader
-Jdk7u21
-JRE8u20
-ROME
-Fastjson
-Jackson
-SpringAOP
+CommonsCollections13567|CommonsCollections24|CommonsBeanutils2|C3P0|AspectJWeaver|bsh|Groovy|Becl|DefiningClassLoader|Jdk7u21|JRE8u20|ROME|Fastjson|Jackson|SpringAOP
 ```
 
 **JDK**
 
 ```java
-jdk17_22
-jdk9_22
-jdk6_8
-jdk6_11
-jdk9_10
+jdk17_22|jdk9_22|jdk6_8|jdk6_11|jdk9_10
 ```
 
 **操作系统**
