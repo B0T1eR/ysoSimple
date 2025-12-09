@@ -72,6 +72,8 @@ public class ThirdPartyConfig extends Config {
                     encodeResult = HackBCELs.encode(classByteCode);
                 } else if (encodeType.equals("JS-JavaCode")){
                     encodeResult = JSExpression.commonExpressModify(classByteCode);
+                } else if (encodeType.equals("JS-defineAnonymousClass-JavaCode")){
+                    encodeResult = JSExpression.unsafeExpressModify(classByteCode);
                 } else if(encodeType.equals("SPEL-JSCode-JavaCode")){
                     String jsJavaCode = JSExpression.commonExpressModify(classByteCode);
                     encodeResult = SpelExpression.expressModify(jsJavaCode);

