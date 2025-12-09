@@ -10,6 +10,7 @@ public class CommandConstant {
     public final static String COMMAND_LINUX_CMD = "linux_cmd:";
     public final static String COMMAND_AUTO_CMD = "auto_cmd:";
     public final static String COMMAND_REVERSESHELL= "reverse_shell:";
+    public final static String COMMAND_SLEEP_DETECT_CLASS= "sleep_detect_class:";
     public final static String COMMAND_CLASS_FILE = "class_file:";
     public final static String COMMAND_CLASS_BASE64 = "class_base64:";
     public final static String COMMAND_CODE_FILE = "code_file:";

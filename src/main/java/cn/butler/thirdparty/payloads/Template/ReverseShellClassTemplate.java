@@ -1,4 +1,4 @@
-package cn.butler.thirdparty.payloads.custom;
+package cn.butler.thirdparty.payloads.Template;
 
 import java.io.File;
 import java.io.InputStream;
