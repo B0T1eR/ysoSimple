@@ -25,7 +25,7 @@ public class FileHandleUtil {
     public static String ClassPathXmlModilfyClass(String classByteName, byte[] classByteCode) {
         //SPEL-Payload制作
         String code = JSExpression.commonExpressModify(classByteCode);
-        String spelPayload = SpelExpression.expressModify(code);
+        String spelPayload = SpelExpression.spelJsCode(code);
         String fileModifyResult = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<beans xmlns=\"http://www.springframework.org/schema/beans\"\n" +
             "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +

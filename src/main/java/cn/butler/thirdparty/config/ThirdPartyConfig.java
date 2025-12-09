@@ -85,9 +85,13 @@ public class ThirdPartyConfig extends Config {
                     encodeResult = JSExpression.commonExpressModify(classByteCode);
                 } else if (encodeType.equals("JS-defineAnonymousClass-JavaCode")){
                     encodeResult = JSExpression.unsafeExpressModify(classByteCode);
+                } else if (encodeType.equals("SPEL-JavaCode")) {
+                    encodeResult = SpelExpression.spelJavaCode(classByteName,classByteCode);
                 } else if(encodeType.equals("SPEL-JSCode-JavaCode")){
                     String jsJavaCode = JSExpression.commonExpressModify(classByteCode);
-                    encodeResult = SpelExpression.expressModify(jsJavaCode);
+                    encodeResult = SpelExpression.spelJsCode(jsJavaCode);
+                } else if (encodeType.equals("SPEL-JavaCode-JDKHigh")) {
+                    encodeResult = SpelExpression.spelJavaCodeJDKHigh(classByteName,classByteCode);
                 } else if(encodeType.equals("Groovy-JavaCode-UtilBase64")){
                     encodeResult = GroovyExpression.groovyShellExpressModifyUtilBase64(classByteCode);
                 } else if (encodeType.equals("Groovy-JavaCode-MiscBase64")){
