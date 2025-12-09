@@ -35,6 +35,14 @@ public class ThirdPartyConfig extends Config {
             String classByteName = (String) object[0];
             byte[] classByteCode = (byte[]) object[1];
 
+            //给生成的字节码设置类名
+            if(cmdLine.hasOption("className")){
+                String newClassName = cmdLine.getOptionValue("className");
+                object = (Object[]) ClassHandleUtil.setClassNameForClass(classByteName,classByteCode,newClassName);
+                classByteName = (String) object[0];
+                classByteCode = (byte[]) object[1];
+            }
+
             //给生成的字节码类设置父类
             if(cmdLine.hasOption("superClassName")){
                 String superClassName = cmdLine.getOptionValue("superClassName");

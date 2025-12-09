@@ -6,6 +6,36 @@ import java.io.IOException;
 public class ClassHandleUtil {
 
     /**
+     * 为字节码设置类名
+     * @param classByteName
+     * @param classByteCode
+     * @param newClassName
+     * @return
+     */
+    public static Object setClassNameForClass(String classByteName, byte[] classByteCode, String newClassName) throws Exception {
+        ClassPool classPool = ClassPool.getDefault();
+        classPool.appendSystemPath(); // 确保能找到基础类
+
+        //检查ClassPool是否已经加载同名类。如果已加载,先将其解冻,再进行修改。
+        CtClass ctClass;
+        if (classPool.getOrNull(classByteName) != null) {
+            ctClass = classPool.get(classByteName);
+            if (ctClass.isFrozen()) {
+                ctClass.defrost(); // 解冻已冻结的类
+            }
+        } else {
+            ctClass = classPool.makeClass(new java.io.ByteArrayInputStream(classByteCode));
+        }
+
+        ctClass.setName(newClassName); // 设置类名
+        // 冻结类，防止进一步修改
+        ctClass.freeze();
+        // 将修改后的类转换为字节码
+        byte[] modifiedByteCode = ctClass.toBytecode();
+        return new Object[]{newClassName,modifiedByteCode};
+    }
+
+    /**
      * 为字节码类添加父类
      * @param className 字节码类名
      * @param byteCode 字节码数组

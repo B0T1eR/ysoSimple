@@ -2945,6 +2945,7 @@ rmi://127.0.0.1:1234/Basic
 
 字节码生成支持如下额外的参数：
 
+* className：为生成的字节码设置类名
 * superClassName：为生成的字节码设置父类
 * interfaceName：为生成的字节码设置实现类
 * classModify：JavaWrapper，对生成的字节码做特殊的修饰
@@ -2967,6 +2968,16 @@ rmi://127.0.0.1:1234/Basic
   * JSVGJar的JSVGCanvas类型Jar包输出，内部执行Java代码
   * CommonJar一般类型的Jar包输出，内部执行Java代码
 * writeToFile：写入到文件中
+
+#### className 为字节码设置类名
+
+描述：对生成的字节码类进行修饰，有些漏洞利用需要设置指定类名，如：SPEL高版本加载的字节码类需要是`org.springframework.expression`包下面的
+
+工具：使用className参数，后面跟着全限定类名
+
+```bash
+-m ThirdPartyAttack -g CustomClass -a "auto_cmd:calc" -className "org.springframework.expression.Test1"
+```
 
 #### superClassName 为字节码设置父类
 

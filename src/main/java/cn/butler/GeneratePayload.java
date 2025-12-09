@@ -116,6 +116,7 @@ public class GeneratePayload {
         thirdPartyOptions.addOption("m", "mode", true, "ThirdPartyAttack");
         thirdPartyOptions.addOption("g", "gadget", true, "Thirdparty gadget");
         thirdPartyOptions.addOption("a", "args", true, "Gadget parameters");
+        thirdPartyOptions.addOption("c", "className", true, "ClassName");
         thirdPartyOptions.addOption("s", "superClassName", true, "Super ClassName");
         thirdPartyOptions.addOption("i", "interfaceName", true, "Interface ClassName");
         thirdPartyOptions.addOption("en", "encode", true, "Base64,Hex encode");
