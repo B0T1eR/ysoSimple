@@ -591,6 +591,8 @@ CommonsCollections利用链能被Java反序列化利用的原因是其中的Tran
 
 ####  SpringAOP(JDK高版本仅Templateslmpl利用方式)
 
+其实这个类可以不是Templateslmpl利用方式，LdapAttribute也可以：https://xz.aliyun.com/news/90792
+
 描述：这条链其实也可以叫做Jackson利用链，利用链的触发流程和Jackson基本一样。但是区分开来主要是该链针对JDK高版本反序列化而设计的：通过SpringAOP包的动态代理类绕过模块化的限制，使用XString头触发POJONode的toString方法，TemplatesImpl加载的类不继承AbstractTranslet接口。
 
 工具：只能用Templateslmpl0来触发字节码加载
